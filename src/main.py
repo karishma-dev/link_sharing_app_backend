@@ -3,6 +3,10 @@ from flask import Flask
 from src.database.db import db_manager
 import os
 from dotenv import load_dotenv
+from src.routers.auth import auth_blueprint
+from src.routers.users import users_blueprint
+from src.routers.platform import platforms_blueprint
+from src.routers.admin import admin_blueprint
 
 load_dotenv()
 
@@ -26,7 +30,11 @@ def create_app():
     def home():
         return "hello world!"
 
-    
+    app.register_blueprint(auth_blueprint, url_prefix="/api/auth")
+    app.register_blueprint(users_blueprint, url_prefix='/api/users')
+    app.register_blueprint(platforms_blueprint, url_prefix='/api/platforms')
+    app.register_blueprint(admin_blueprint, url_prefix='/api/admin')
+
     return app
 
 

@@ -1,2 +1,8 @@
 flask
 python-dotenv
+pydantic
+flask-sqlalchemy
+psycopg2-binary
+email-validator
+pyjwt
+bcrypt

@@ -51,8 +51,44 @@ def admin_required(f):
     """Decorator to protect routes that require admin privileges"""
     @wraps(f)
     def decorated(*args, **kwargs):
-        # This would use jwt_required first, then check if user is admin
-        # For now, it's just a placeholder - you can implement admin logic later
-        return jwt_required(f)(*args, **kwargs)
+        token = None
+        
+        # Check for token in Authorization header
+        if 'Authorization' in request.headers:
+            auth_header = request.headers['Authorization']
+            try:
+                token = auth_header.split(" ")[1]  # Bearer <token>
+            except IndexError:
+                return jsonify({'error': 'Invalid token format'}), 401
+        
+        if not token:
+            return jsonify({'error': 'Token is missing'}), 401
+        
+        try:
+            # Verify token
+            payload = User.verify_token(token)
+            if payload is None:
+                return jsonify({'error': 'Token is invalid or expired'}), 401
+            
+            # Check if user is admin from token (no database query needed!)
+            if not payload.get('is_admin', False):
+                return jsonify({'error': 'Admin access required'}), 403
+            
+            # Get current user for the route function
+            user_id_str = payload['user_id']
+            try:
+                user_uuid = uuid.UUID(user_id_str)
+                current_user = User.query.filter_by(id=user_uuid).first()
+            except ValueError:
+                return jsonify({'error': 'Invalid user ID in token'}), 401
+                
+            if not current_user:
+                return jsonify({'error': 'User not found'}), 401
+            
+        except Exception as e:
+            print(f"Admin check error: {e}")
+            return jsonify({'error': 'Token verification failed'}), 401
+        
+        return f(current_user, *args, **kwargs)
     
     return decorated

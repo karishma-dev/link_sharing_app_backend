@@ -22,8 +22,9 @@ class User(db.Model):
     image = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
-    
-    user_links = db.relationship('UserLink', backref='user', lazy=True)
+    is_admin = db.Column(db.Boolean, default=False, nullable=False)
+    # Relationship to user links
+    user_links = db.relationship('UserLink', backref='user_link_user', lazy=True)
 
     def __repr__(self):
         return f'<User {self.email}>'
@@ -47,6 +48,7 @@ class User(db.Model):
         payload = {
             'user_id': str(self.id),
             'email': self.email,
+            'is_admin': self.is_admin,  # Include admin status in token
             'exp': datetime.now(timezone.utc) + timedelta(hours=24),  # Token expires in 24 hours
             'iat': datetime.now(timezone.utc)
         }
@@ -71,6 +73,7 @@ class User(db.Model):
             'lastName': self.lastName,
             'email': self.email,
             'image': self.image,
+            'is_admin': self.is_admin,  # Include admin status
             'links': [link.to_dict() for link in self.user_links] if self.user_links else [],
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
@@ -86,7 +89,7 @@ class Platform(db.Model):
     previewColor = db.Column(db.String(50), nullable=False)
     
     # Relationship to user links
-    user_links = db.relationship('UserLink', backref='platform', lazy=True)
+    user_links = db.relationship('UserLink', backref='user_link_platform', lazy=True)
     
     def __repr__(self):
         return f'<Platform {self.name}>'
@@ -108,10 +111,6 @@ class UserLink(db.Model):
     platform_id = db.Column(UUID(as_uuid=True), db.ForeignKey('platforms.id'), nullable=False)
     url = db.Column(db.String(500), nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-
-    # Relationships - let the User and Platform models handle the backrefs
-    user = db.relationship('User')
-    platform = db.relationship('Platform')
     
     def __repr__(self):
         return f'<UserLink user={self.user_id} platform={self.platform_id}>'
@@ -123,5 +122,5 @@ class UserLink(db.Model):
             'platform_id': str(self.platform_id),
             'url': self.url,
             'created_at': self.created_at.isoformat() if self.created_at else None,
-            'platform': self.platform.to_dict() if self.platform else None
+            'platform': self.user_link_platform.to_dict() if self.user_link_platform else None
         }

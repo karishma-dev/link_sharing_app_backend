@@ -56,34 +56,3 @@ def admin_required(f):
         return jwt_required(f)(*args, **kwargs)
     
     return decorated
-
-
-def optional_auth(f):
-    """Decorator for routes where authentication is optional"""
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        current_user = None
-        token = None
-        
-        # Check for token in Authorization header
-        if 'Authorization' in request.headers:
-            auth_header = request.headers['Authorization']
-            try:
-                token = auth_header.split(" ")[1]  # Bearer <token>
-                
-                # Verify token
-                payload = User.verify_token(token)
-                if payload is not None:
-                    user_id_str = payload['user_id']
-                    try:
-                        user_uuid = uuid.UUID(user_id_str)
-                        current_user = User.query.filter_by(id=user_uuid).first()
-                    except (ValueError, Exception):
-                        current_user = None
-                        
-            except (IndexError, Exception):
-                current_user = None
-        
-        return f(current_user, *args, **kwargs)
-    
-    return decorated

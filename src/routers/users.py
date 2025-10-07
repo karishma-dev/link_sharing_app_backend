@@ -1,12 +1,10 @@
 from flask import Blueprint, jsonify
-from src.middleware.auth import jwt_required, admin_required, optional_auth
-from src.middleware.utils import rate_limit, validate_json
+from src.middleware.auth import jwt_required, admin_required
+from src.middleware.utils import validate_json
 
 users_blueprint = Blueprint("users", __name__)
 
 @users_blueprint.route("/", methods=['GET'])
-@rate_limit(max_requests=50, window_seconds=3600)  # 50 requests per hour
-@optional_auth  # Authentication is optional for this endpoint
 def getAllUsers(current_user=None):
     """Get all users - authentication optional"""
     if current_user:

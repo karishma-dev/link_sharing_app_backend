@@ -206,3 +206,22 @@ docker ps -a
 docker images
 
 source venv/bin/activate
+
+# 1. Make model changes
+
+# 2. Generate migration
+
+flask db migrate -m "Add user_links table"
+
+# 3. Review the generated migration script
+
+# 4. Apply to development database
+
+flask db upgrade
+
+# 5. Commit migration files to git
+
+git add migrations/
+git commit -m "Add user_links table migration"
+
+# 6. Deploy - migration runs automatically

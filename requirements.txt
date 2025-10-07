@@ -2,6 +2,7 @@ flask
 python-dotenv
 pydantic
 flask-sqlalchemy
+flask-migrate
 psycopg2-binary
 email-validator
 pyjwt

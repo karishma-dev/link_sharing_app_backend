@@ -20,10 +20,11 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
     image = db.Column(db.String(255), nullable=True)
-    links = db.Column(ARRAY(db.String), default=list)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
+    user_links = db.relationship('UserLink', backref='user', lazy=True)
+
     def __repr__(self):
         return f'<User {self.email}>'
     
@@ -65,12 +66,12 @@ class User(db.Model):
     
     def to_dict(self):
         return {
-            'id': self.id,
+            'id': str(self.id),
             'firstName': self.firstName,
             'lastName': self.lastName,
             'email': self.email,
             'image': self.image,
-            'links': self.links,
+            'links': [link.to_dict() for link in self.user_links] if self.user_links else [],
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
@@ -84,6 +85,9 @@ class Platform(db.Model):
     darkIcon = db.Column(db.String(255), nullable=False)
     previewColor = db.Column(db.String(50), nullable=False)
     
+    # Relationship to user links
+    user_links = db.relationship('UserLink', backref='platform', lazy=True)
+    
     def __repr__(self):
         return f'<Platform {self.name}>'
     
@@ -94,4 +98,30 @@ class Platform(db.Model):
             'lightIcon': self.lightIcon,
             'darkIcon': self.darkIcon,
             'previewColor': self.previewColor
+        }
+    
+class UserLink(db.Model):
+    __tablename__ = 'user_links'
+
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=False)
+    platform_id = db.Column(UUID(as_uuid=True), db.ForeignKey('platforms.id'), nullable=False)
+    url = db.Column(db.String(500), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Relationships - let the User and Platform models handle the backrefs
+    user = db.relationship('User')
+    platform = db.relationship('Platform')
+    
+    def __repr__(self):
+        return f'<UserLink user={self.user_id} platform={self.platform_id}>'
+    
+    def to_dict(self):
+        return {
+            'id': str(self.id),
+            'user_id': str(self.user_id),
+            'platform_id': str(self.platform_id),
+            'url': self.url,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'platform': self.platform.to_dict() if self.platform else None
         }

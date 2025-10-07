@@ -4,6 +4,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from flask import Flask
+from flask_migrate import Migrate
 from src.database.db import init_db
 from src.models.models import db
 from dotenv import load_dotenv
@@ -23,6 +24,9 @@ def create_app():
     
     # Initialize database - much simpler now!
     init_db(app)
+    
+    # Initialize Flask-Migrate
+    migrate = Migrate(app, db)
 
     @app.route("/", methods=['GET'])
     def home():

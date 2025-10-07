@@ -2,3 +2,7 @@
 venv
 # .flaskenv
 **/__pycache__
+*.db
+*.sqlite
+*.sqlite3
+database.db
